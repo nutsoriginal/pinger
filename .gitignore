@@ -1,0 +1,12 @@
+/.bundle
+/tmp
+
+# editors
+.idea/
+.vscode/
+
+# osx
+.DS_Store
+
+#env
+#.env*.local

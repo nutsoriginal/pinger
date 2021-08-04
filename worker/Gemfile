@@ -1,0 +1,33 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+ruby '3.0.2'
+
+gem 'activesupport'
+gem 'async_sinatra'
+gem 'connection_pool'
+gem 'configus'
+gem 'em-hiredis'
+gem 'em-http-request'
+gem 'em-logger'
+gem 'em-synchrony'
+gem 'frankenstein'
+gem 'hiredis'
+gem 'icmp4em'
+gem 'multi_json'
+gem 'nenv'
+gem 'redis'
+gem 'em-pg-client'
+gem 'sinatra'
+gem 'thin'
+gem 'webrick'
+
+group :development do
+  gem 'bundler-audit', require: false
+  gem 'dotenv'
+  gem 'fasterer', require: false
+  gem 'pry'
+  gem 'rubocop', require: false
+  gem 'rubocop-performance', require: false
+end
