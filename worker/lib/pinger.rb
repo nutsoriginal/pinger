@@ -4,16 +4,22 @@ require 'pg/em'
 
 class Pinger
   class << self
-    attr_accessor :pop_counter, :ping_counter
+    attr_accessor :pop_counter,
+                  :ping_counter
+
+    attr_reader :pops_per_sec,
+                :pings_per_sec,
+                :ready_to_ping_queue_len,
+                :in_progress_queue_len,
+                :timer_set_size
 
     def run
       @pop_counter = 0
       @ping_counter = 0
       @results = []
 
-      enable_dubug_logs if configus.debug
       prepare
-
+      start_counters
       poll_redis_timers_set
       process_ping_queue
       periodically_persist_data
@@ -25,13 +31,13 @@ class Pinger
       EM.defer do
         loop do
           ip = sync_redis.brpoplpush(configus.redis.queue.ready_to_ping.name, configus.redis.queue.in_progress.name)
-          self.pop_counter += 1 if configus.debug
+          self.pop_counter += 1
 
           EM.next_tick do
             ping(ip) do |ip, latency|
               save_result(ip, latency)
               enqueue_delayed(ip)
-              self.ping_counter += 1 if configus.debug
+              self.ping_counter += 1
             end
           end
         end
@@ -78,6 +84,8 @@ class Pinger
     end
 
     def move_elapsed_to_work(ips)
+      return unless ips.any?
+
       async_redis.with do |conn|
         conn.multi
         ips.each do |ip|
@@ -85,7 +93,7 @@ class Pinger
           conn.lpush(configus.redis.queue.ready_to_ping.name, ip)
         end
         conn.exec
-      end if ips.any?
+      end
     end
 
     Result = Struct.new(:ip, :latency, :created_at) do
@@ -95,7 +103,7 @@ class Pinger
 
       def to_sql_string
         lat = latency || 'NULL'
-        "('%s', %s, '%s')" % [ip, lat, created_at]
+        format("('%s', %s, '%s')", ip, lat, created_at)
       end
 
       def to_log_string
@@ -111,8 +119,10 @@ class Pinger
     end
 
     def write_results_to_db
+      return if @results.empty?
+
       # TODO: use active_record with adapter
-      query = "INSERT INTO PINGS (ip, latency, created_at) VALUES #{@results.map(&:to_sql_string).join(', ')};"
+      query = "INSERT INTO ping_results (ip, latency, created_at) VALUES #{@results.map(&:to_sql_string).join(', ')};"
       df = async_pg.async_query(query)
 
       if configus.debug
@@ -124,9 +134,10 @@ class Pinger
     end
 
     def log_pg(response)
-      text =  if response.is_a?(PG::Result)
+      text =  case response
+              when PG::Result
                 response.cmd_status
-              elsif response.is_a?(PG::Error)
+              when PG::Error
                 response.to_s
               end
 
@@ -188,32 +199,46 @@ class Pinger
       App.logger.debug message, initiator
     end
 
-    def enable_dubug_logs
+    def start_counters
       EM.add_periodic_timer 1 do
         EM.defer do
-          async_redis.llen(configus.redis.queue.ready_to_ping.name) do |len|
-            log "METERS: Ready to ping queue size: #{len}"
-          end
-          async_redis.llen(configus.redis.queue.in_progress.name) do |len|
-            log "METERS: In progress queue size: #{len}"
-          end
-          async_redis.zcard(configus.redis.queue.timer_set.name) do |size|
-            log "METERS: Delayed set size: #{size}"
-          end
-          log "METERS: Queue pops count #{self.pop_counter}"
-          log "METERS: Ping complete count #{self.ping_counter}"
+
+          @pops_per_sec = pop_counter
+          @pings_per_sec = ping_counter
           self.pop_counter = 0
           self.ping_counter = 0
+
+          async_redis.llen(configus.redis.queue.ready_to_ping.name) do |len|
+            @ready_to_ping_queue_len = len
+          end
+          async_redis.llen(configus.redis.queue.in_progress.name) do |len|
+            @in_progress_queue_len = len
+          end
+          async_redis.zcard(configus.redis.queue.timer_set.name) do |size|
+            @timer_set_size = size
+          end
+
+          dubug_logs if configus.debug
         end
       end
     end
 
+    def dubug_logs
+      log "METERS: Ready to ping queue length #{self.ready_to_ping_queue_len}"
+      log "METERS: In progress queue length #{self.in_progress_queue_len}"
+      log "METERS: Timer set size #{self.timer_set_size}"
+      log "METERS: Queue pops per sec #{self.pops_per_sec}"
+      log "METERS: Ping complete count #{self.pings_per_sec}"
+    end
+
     def prepare
+      return unless configus.debug
+
       async_redis.del(configus.redis.queue.ready_to_ping.name)
       async_redis.del(configus.redis.queue.in_progress.name)
       async_redis.del(configus.redis.queue.timer_set.name)
-      configus.ping.ips.each { |ip| async_redis.lpush(configus.redis.queue.ready_to_ping.name, ip) }
-      async_redis.llen(configus.redis.queue.ready_to_ping.name) { |v| p v }
+      # configus.ping.ips.each { |ip| async_redis.lpush(configus.redis.queue.ready_to_ping.name, ip) }
+      # async_redis.llen(configus.redis.queue.ready_to_ping.name) { |v| p v }
     end
   end
 end

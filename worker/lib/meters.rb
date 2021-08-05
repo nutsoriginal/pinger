@@ -21,9 +21,11 @@ class Meters
     end
 
     def concurrency_level
-      stats = { Fiber: 0, Thread: 0 }
-      ObjectSpace.each_object(Fiber) { |obj| stats[:Fiber] += 1 if obj.alive? }
-      ObjectSpace.each_object(Thread) { stats[:Thread] += 1 }
+      stats = { Fibers: 0, Threads: 0 }
+      ObjectSpace.each_object(Fiber) { |obj| stats[:Fibers] += 1 if obj.alive? }
+      ObjectSpace.each_object(Thread) { stats[:Threads] += 1 }
+      stats[:Connections] = connection_count
+      stats[:Timers] = timer_count
 
       stats
     end

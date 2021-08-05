@@ -5,7 +5,6 @@ require 'logger'
 
 module Metrics
   module EmMetrics
-    # rubocop:disable Metrics/MethodLength
     def self.register(registry = Prometheus::Client.registry, logger: Logger.new('/dev/null'))
       Frankenstein::CollectedMetric.new(
         :event_loop_latency,
@@ -24,9 +23,29 @@ module Metrics
         labels: [:type]
       ) do
         stats = Meters.concurrency_level
-        { { type: 'Fiber' } => stats[:Fiber], { type: 'Thread' } => stats[:Thread] }
+        {
+          { type: 'Fibers' } => stats[:Fibers],
+          { type: 'Threads' } => stats[:Threads],
+          { type: 'Connections' } => stats[:Connections],
+          { type: 'Timers' } => stats[:Timers]
+        }
+      end
+
+      Frankenstein::CollectedMetric.new(
+        :performance,
+        docstring: 'worker performance',
+        registry: registry,
+        logger: logger,
+        labels: [:type]
+      ) do
+        {
+          { type: 'pops_per_sec' } => Pinger.pops_per_sec,
+          { type: 'pings_per_sec' } => Pinger.pings_per_sec,
+          { type: 'ready_to_ping_queue_len' } => Pinger.ready_to_ping_queue_len,
+          { type: 'in_progress_queue_len' } => Pinger.in_progress_queue_len,
+          { type: 'timer_set_size' } => Pinger.timer_set_size
+        }
       end
     end
-    # rubocop:enable Metrics/MethodLength
   end
 end

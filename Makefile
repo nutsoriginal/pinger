@@ -19,20 +19,21 @@ run-worker:
 
 .PHONY: run-api
 run-api:
-	cd ./rails && bin/server.sh
+	cd ./http_api && bin/server.sh
 
 .PHONY: deps
 deps:
 	bundle install --gemfile ./worker/Gemfile
+	bundle install --gemfile ./http_api/Gemfile
 
 .PHONY: docker-setup
 docker-setup:
-	docker compose build
+	docker-compose build
 
 .PHONY: docker-demo
 docker-demo:
-	docker compose up
+	docker-compose up
 
 .PHONY: docker-services
 docker-services:
-	docker compose -f docker-compose.services.yml up
+	docker-compose -f docker-compose.services.yml up
