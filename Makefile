@@ -1,9 +1,14 @@
 .PHONY: prechecks
-prechecks: check-bundle-audit check-fasterer check-rubocop
+prechecks: check-bundle-audit check-brakeman check-fasterer check-rubocop
 
 .PHONY: check-rubocop
 check-rubocop:
-	bundle exec rubocop --parallel
+	-cd ./worker && bundle exec rubocop --parallel
+	cd ./http_api && bundle exec rubocop --parallel
+
+.PHONY: check-brakeman
+check-brakeman:
+	bundle exec brakeman -A --no-progress --no-pager
 
 .PHONY: check-fasterer
 check-fasterer:
