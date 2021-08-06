@@ -123,7 +123,7 @@ Configus.build App.env do
         95.163.95.29
         81.19.72.56
         178.248.232.209
-        ]
+      ]
     end
   end
 

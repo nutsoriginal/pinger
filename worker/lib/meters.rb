@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'active_support/core_ext/module'
 
 class Meters
@@ -13,7 +14,7 @@ class Meters
         @latency = (current_time - @last_em_ping - configus.metrics.update_period) * 1000
         @last_em_ping = current_time
         if configus.debug
-          log "METERS: Loop latency %.5f ms" % latency
+          log 'METERS: Loop latency %.5f ms' % latency
           log "METERS: Connections count: #{connection_count}"
           log "METERS: Timers count: #{timer_count}"
         end

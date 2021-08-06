@@ -177,7 +177,7 @@ class Pinger
     end
 
     def async_pg
-      postgres_client = -> do
+      postgres_client = lambda do
         ::PG::EM::Client.new host: configus.postgres.host,
                              port: configus.postgres.port,
                              dbname: configus.postgres.database,
@@ -202,7 +202,6 @@ class Pinger
     def start_counters
       EM.add_periodic_timer 1 do
         EM.defer do
-
           @pops_per_sec = pop_counter
           @pings_per_sec = ping_counter
           self.pop_counter = 0
@@ -224,11 +223,11 @@ class Pinger
     end
 
     def dubug_logs
-      log "METERS: Ready to ping queue length #{self.ready_to_ping_queue_len}"
-      log "METERS: In progress queue length #{self.in_progress_queue_len}"
-      log "METERS: Timer set size #{self.timer_set_size}"
-      log "METERS: Queue pops per sec #{self.pops_per_sec}"
-      log "METERS: Ping complete count #{self.pings_per_sec}"
+      log "METERS: Ready to ping queue length #{ready_to_ping_queue_len}"
+      log "METERS: In progress queue length #{in_progress_queue_len}"
+      log "METERS: Timer set size #{timer_set_size}"
+      log "METERS: Queue pops per sec #{pops_per_sec}"
+      log "METERS: Ping complete count #{pings_per_sec}"
     end
 
     def prepare
@@ -242,4 +241,3 @@ class Pinger
     end
   end
 end
-

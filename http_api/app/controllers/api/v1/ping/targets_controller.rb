@@ -33,8 +33,8 @@ class Api::V1::Ping::TargetsController < ApplicationController
 
   def redis
     @redis ||= Redis.new driver: :hiredis,
-                              host: configus.redis.host,
-                              port: configus.redis.port,
-                              db: configus.redis.db
+                         host: configus.redis.host,
+                         port: configus.redis.port,
+                         db: configus.redis.db
   end
 end
