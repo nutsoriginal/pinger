@@ -35,8 +35,8 @@ deps:
 docker-setup:
 	docker-compose build
 
-.PHONY: docker-demo
-docker-demo:
+.PHONY: docker-run
+docker-run:
 	docker-compose up
 
 .PHONY: docker-services

@@ -8,11 +8,15 @@ The ping service
 - Async pings
 - Up to 1000RPS per worker with only ~30% CPU load
 
-### Start
-Demo in docker
+### Demo
 
     make docker-run
+
+Optionally add ~50 IPs
+
     bundle exec rake pinger:add_test_ips
+
+### Dev
 
 Run only Redis and Postgres in docker
 
@@ -28,7 +32,6 @@ Run api on host machine
     make deps
     make run-api
 
-### Dev
 Checks (rubocop, fasterer && bundle-audit)
 
     make prechecks
