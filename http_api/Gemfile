@@ -1,0 +1,36 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+git_source(:github) { |repo| "https://github.com/#{repo}.git" }
+
+ruby '3.0.2'
+
+gem 'rails', '6.1.4'
+
+gem 'bootsnap', '>= 1.4.4', require: false
+gem 'configus'
+gem 'frankenstein'
+gem 'hiredis'
+gem 'nenv'
+gem 'pg'
+gem 'puma'
+gem 'redis'
+gem 'scenic'
+gem 'webrick'
+
+group :development, :test do
+  gem 'byebug', platforms: %i[mri mingw x64_mingw]
+end
+
+group :development do
+  gem 'bundler-audit', require: false
+  gem 'dotenv-rails'
+  gem 'fasterer', require: false
+  gem 'listen', '~> 3.3'
+  gem 'pry'
+  gem 'rubocop', require: false
+  gem 'rubocop-performance', require: false
+  gem 'spring'
+end
+
+gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]

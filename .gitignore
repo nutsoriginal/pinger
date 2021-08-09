@@ -1,0 +1,30 @@
+/.bundle
+/tmp
+
+# editors
+.idea/
+.vscode/
+
+# osx
+.DS_Store
+
+#env
+#.env*.local
+
+
+# Ignore all logfiles and tempfiles.
+/http_api/log/*
+/http_api/tmp/*
+!/http_api/log/.keep
+!/http_api/tmp/.keep
+
+# Ignore pidfiles, but keep the directory.
+/http_api/tmp/pids/*
+!/http_api/tmp/pids/
+!/http_api/tmp/pids/.keep
+
+# Ignore uploaded files in development.
+.byebug_history
+
+# Ignore master key for decrypting credentials and more.
+/http_api/config/master.key

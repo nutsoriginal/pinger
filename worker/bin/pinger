@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../config/boot'
+
+begin
+  App.start
+rescue Exception => e # rubocop:disable Lint/RescueException
+  warn "ERROR: #{e}"
+  warn e.backtrace
+  raise e
+end

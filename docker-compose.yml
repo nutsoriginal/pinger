@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  worker:
+    build:
+      context: ./worker
+      target: development
+    command: bin/server.sh
+    volumes:
+      - bundle_worker:/bundle
+      - ./worker:/opt/pinger:cached
+      - ~/.ssh/id_rsa:/root/.ssh/id_rsa:ro
+      - ~/.ssh/known_hosts:/root/.ssh/known_hosts:rw
+      - ~/.bash_history:/root/.bash_history
+      - ~/.gitconfig:/root/.gitconfig:ro
+    stdin_open: true
+    tty: true
+    env_file:
+      - ./worker/.env.development
+    environment:
+      - DC=true
+    tmpfs:
+      - /tmp
+    ports:
+      - 3000:3000
+    depends_on:
+      rails:
+        condition: service_healthy
+
+  rails:
+    build:
+      context: ./http_api
+      target: development
+    command: sh -c "
+        bundle exec rails db:drop db:create db:migrate &&
+        bin/server.sh
+      "
+    volumes:
+      - bundle_rails:/bundle
+      - ./http_api:/opt/http_api:cached
+      - ~/.ssh/id_rsa:/root/.ssh/id_rsa:ro
+      - ~/.ssh/known_hosts:/root/.ssh/known_hosts:rw
+      - ~/.bash_history:/root/.bash_history
+      - ~/.gitconfig:/root/.gitconfig:ro
+    stdin_open: true
+    tty: true
+    env_file:
+      - ./http_api/.env.development
+    environment:
+      - DC=true
+    tmpfs:
+      - /tmp
+    ports:
+      - 3001:3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3001/health" ]
+      interval: 1s
+      timeout: 5s
+      retries: 60
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    env_file:
+      - ./worker/.env.development
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+
+
+volumes:
+  bundle_worker:
+  bundle_rails:
